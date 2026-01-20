@@ -1,0 +1,16 @@
+{
+    "objects": [],
+    "objectSets": [
+        {
+            "objects": [
+                {
+                    "query": "SELECT Name FROM Account",
+                    "operation": "Upsert",
+                    "externalId": "Name"
+                }
+            ]
+        }
+    ],
+    "bulkApiVersion": "1.0",
+    "promptOnMissingParentObjects": false
+}
