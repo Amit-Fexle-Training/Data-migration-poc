@@ -77,6 +77,15 @@ jobs:
           --alias targetOrg \
           # --set-default
 
+    - name: Verify Org Auth (Critical)
+      run: |
+        echo "==== ORG LIST ===="
+        sf org list --all
+    
+        echo "==== ORG DISPLAY ===="
+        sf org display --target-org sourceOrg --verbose
+
+
     # Run SFDMU
     - name: Run SFDMU Migration
       run: |
