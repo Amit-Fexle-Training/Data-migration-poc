@@ -1,0 +1,68 @@
+name: Migrate Data
+
+on:
+  workflow_dispatch:
+    # inputs:
+    #   test_run_option:
+    #     description: 'Select test run option'
+    #     required: true
+    #     type: choice
+    #     options:
+    #       - 'Run Full Test'
+    #       - 'Run Selected Test'
+    #       - 'No Test Run'
+  
+# Environment variables
+env:
+  SF_USE_GENERIC_UNIX_KEYCHAIN: true
+  SF_DOMAIN_RETRY: 300
+  SF_DISABLE_APP_HUB: true
+  SF_LOG_LEVEL: DEBUG
+  
+jobs:
+  data-migration:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    # Checkout the repository
+    - name: Checkout source code
+      uses: actions/checkout@v4
+      with:
+        # fetch-depth: 0  # Fetch full history for git diff
+        persist-credentials: true  # Persist credentials for git push operations
+      
+    # Setup Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    # Install Salesforce CLI via NPM
+    - name: Install Salesforce CLI
+      run: |
+        npm install -g @salesforce/cli
+        sf --version
+
+    # Install SFDMU
+    - name: Install SFDMU
+      run: |
+        echo y | sf plugins install sfdmu
+
+    # Create JWT key file from secret
+    - name: Create JWT Key File
+      run: |
+        echo "${{ secrets.SF_JWT_KEY }}" > jwt-key.txt
+        chmod 600 jwt-key.txt
+
+    # Authenticate to Salesforce using JWT
+    - name: Authenticate to Salesforce
+      run: |
+        sf org login jwt \
+          --client-id ${{ secrets.SF_CLIENT_ID }} \
+          --jwt-key-file jwt-key.txt \
+          --username ${{ secrets.SF_USERNAME }} \
+          --instance-url ${{ secrets.SF_INSTANCE_URL }} \
+          --alias target-org \
+          --set-default
