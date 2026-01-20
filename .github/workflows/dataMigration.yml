@@ -83,6 +83,6 @@ jobs:
         sf sfdmu:run \
           --sourceusername sourceOrg \
           --targetusername targetOrg \
-          --path "./OrgA/sfdmu/export.json"
+          --path "./OrgA/sfdmu"
 
           
