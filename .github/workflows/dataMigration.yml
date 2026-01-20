@@ -65,7 +65,7 @@ jobs:
           --username ${{ secrets.SF_USERNAME }} \
           --instance-url ${{ secrets.SF_INSTANCE_URL }} \
           --alias sourceOrg \
-          --set-default
+          # --set-default
 
     - name: Authenticate to Target Org
       run: |
@@ -75,7 +75,7 @@ jobs:
           --username ${{ secrets.SF_USERNAME }} \
           --instance-url ${{ secrets.SF_INSTANCE_URL }} \
           --alias targetOrg \
-          --set-default
+          # --set-default
 
     # Run SFDMU
     - name: Run SFDMU Migration
