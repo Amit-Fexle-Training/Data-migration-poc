@@ -57,12 +57,32 @@ jobs:
         chmod 600 jwt-key.txt
 
     # Authenticate to Salesforce using JWT
-    - name: Authenticate to Salesforce
+    - name: Authenticate to Source Org
       run: |
         sf org login jwt \
           --client-id ${{ secrets.SF_CLIENT_ID }} \
           --jwt-key-file jwt-key.txt \
           --username ${{ secrets.SF_USERNAME }} \
           --instance-url ${{ secrets.SF_INSTANCE_URL }} \
-          --alias target-org \
+          --alias sourceOrg \
           --set-default
+
+    - name: Authenticate to Target Org
+      run: |
+        sf org login jwt \
+          --client-id ${{ secrets.SF_CLIENT_ID }} \
+          --jwt-key-file jwt-key.txt \
+          --username ${{ secrets.SF_USERNAME }} \
+          --instance-url ${{ secrets.SF_INSTANCE_URL }} \
+          --alias targetOrg \
+          --set-default
+
+    # Run SFDMU
+    - name: Run SFDMU Migration
+      run: |
+        sf sfdmu:run \
+          --sourceusername sourceOrg \
+          --targetusername targetOrg \
+          --path "./OrgA/sfdmu/export.json"
+
+          
