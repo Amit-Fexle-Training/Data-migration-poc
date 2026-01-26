@@ -94,4 +94,15 @@ jobs:
           --targetusername sourceOrg \
           --path "./OrgA/sfdmu"
 
-          
+    - name: Commit Results To Result Branch
+      # if: steps.Folder_check.outputs.Folder_found == 'true'
+      if: always()
+      run: |
+        releaseName="OrgA/"
+        branchName="main"
+        git fetch origin "$branchName":refs/remotes/origin/"$branchName" # Fetch the latest state of the branch
+        git checkout -b "$branchName" origin/"$branchName" # Create and switch to a local branch based on the remote one
+        git add "$releaseName" # Stage the Results folder for commit
+        git commit -m "Upload log to $branchName branch" || echo "No changes to commit" # Commit the changes
+        git push origin "$branchName" # Push the changes to the remote branch
+      
