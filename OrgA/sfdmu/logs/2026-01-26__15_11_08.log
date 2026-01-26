@@ -1,0 +1,138 @@
+
+ [15:11:08.612] Execution of the command sfdmu:run has been started.
+
+ LOADING AND VALIDATING THE EXPORT.JSON SCRIPT ...
+
+ OBJECT SET #1 STARTED
+
+ {
+   "Running Plugin version": "4.39.0"
+}
+ {
+   "Running Add-On API version": "1.6.0"
+}
+
+ [15:11:08.617] Loading Core Add-On Module declarations ...
+ [15:11:08.696] Connecting to the sourceOrg using SFDX sf org display ...
+ [15:11:12.480] Successfully connected to the sourceOrg.
+ [15:11:14.538] Connecting to the sourceOrg using SFDX sf org display ...
+ [15:11:18.108] Successfully connected to the sourceOrg.
+ {
+   "Source": "sourceOrg.",
+   "Target": "sourceOrg.",
+   "Package script": "/home/runner/work/Data-migration-poc/Data-migration-poc/OrgA/sfdmu/export.json."
+}
+
+ GETTING AND ANALYSING OBJECT METADATA ...
+ [15:11:19.406] Processing the object Account ...
+ [15:11:19.406] Fetching metadata of the Account (Source) ...
+ [15:11:20.832] Fetching metadata of the Account (Target) ...
+ [15:11:22.927] Fetching metadata of the Group (Source) ...
+ [15:11:23.834] Processing the object Account ...
+
+ PREPARING DATA MIGRATION JOB ...
+ [15:11:23.835] Building the migration strategy ...
+ {
+   "Order of objects to query": "Account"
+}
+ {
+   "Order of objects to delete": "Account"
+}
+ {
+   "Order of objects to update": "Account"
+}
+ [15:11:23.837] Preparing of the data migration job has been completed.
+
+ ANALYSING DATA...
+ [15:11:24.327] {Account} The original query string of this object is returning 113 records from the Source org.
+ [15:11:24.843] {Account} The original query string of this object is returning 113 records from the Target org.
+
+ TRIGGERING ADD-ON EVENTS ...
+ [15:11:24.844] No Add-On modules found to run.
+
+ [15:11:24.844] Ready to process the data.
+
+ DELETING OLD DATA FROM THE TARGET ...
+ [15:11:24.845] {Account} No records to delete.
+ [15:11:24.845] Deleting data was skipped.
+
+ SOURCE:
+ ===========
+
+ FETCHING THE DATA (STAGE 1) ...
+ [15:11:24.847] {Account} Fetching the Source data from Org (STAGE 1: all records) ...
+ [15:11:24.847] {Account} Query string: SELECT Id, Name  FROM  Account.
+ [15:11:24.848] {Account} Using REST API to retrieve the data ...
+ [15:11:25.527] {Account} Data retrieval (Source) has been completed. Got 113 new records.
+ [15:11:25.528] Data retrieval (STAGE 1) has been completed.
+
+ FETCHING THE DATA (STAGE 2) ...
+ [15:11:25.528] PASS 1
+ ===========
+ [15:11:25.528] No records
+
+ [15:11:25.529] PASS 2
+ ===========
+ [15:11:25.529] No records
+
+ [15:11:25.529] PASS 3
+ ===========
+ [15:11:25.529] No records
+
+ [15:11:25.529] PASS 4
+ ===========
+ [15:11:25.530] No records
+
+ TARGET:
+ ===========
+ [15:11:25.531] {Account} Fetching the Target data from Org (STAGE 2: all records) ...
+ [15:11:25.531] {Account} Query string: SELECT Id, Name  FROM  Account.
+ [15:11:25.531] {Account} Using REST API to retrieve the data ...
+ [15:11:26.373] {Account} Data retrieval (Target) has been completed. Got 113 new records.
+ [15:11:26.373] Data retrieval (STAGE 2) has been completed.
+
+ TRIGGERING ADD-ON EVENTS ...
+ [15:11:26.374] No Add-On modules found to run.
+
+
+ DATA RETRIEVAL SUMMARY.
+ [15:11:26.374] {Account} The total amount of the retrieved records: 113/113.
+
+ UPDATING THE TARGET (STAGE 1) ...
+ [15:11:26.377] {Account} Amount of records to Insert: 72.
+ [15:11:26.379] {Account} The Insert API operation has been started using REST API.
+ [15:11:26.379] [Job# REST:Insert] {Account} The job has been created. Uploading data ...
+ [15:11:27.396] {Account} The Insert API operation has been completed.
+ [15:11:27.400] {Account} 41 target records remained untouched, since they do not differ from the corresponding source records.
+ [15:11:27.400] {Account} The Target has been updated. Totally processed 72 records.
+
+
+ [15:11:27.400] The Target (STAGE 1) has been updated. Totally processed 72 records.
+
+ UPDATING THE TARGET (STAGE 2) ...
+
+ [15:11:27.401] PASS 1
+ ===========
+
+ [15:11:27.401] PASS 2
+ ===========
+
+ [15:11:27.401] Nothing was updated.
+
+ TRIGGERING ADD-ON EVENTS ...
+ [15:11:27.402] No Add-On modules found to run.
+
+
+ DATA PROCESSING SUMMARY.
+ [15:11:27.402] {Account} Totally processed 72 records.
+
+ [15:11:27.402] Writing to /home/runner/work/Data-migration-poc/Data-migration-poc/OrgA/sfdmu/MissingParentRecordsReport.csv ...
+
+
+ TRIGGERING ADD-ON EVENTS ...
+ [15:11:27.403] No Add-On modules found to run.
+
+
+ [15:11:27.404] Command succeeded.
+ [15:11:27.404] Execution of the command sfdmu:run has been completed. Exit code 0 (SUCCESS).
+ [15:11:27.405] Total time elapsed: 00h 00m 18s 794ms .
