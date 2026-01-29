@@ -2,15 +2,15 @@ name: Migrate Data
 
 on:
   workflow_dispatch:
-    # inputs:
-    #   test_run_option:
-    #     description: 'Select test run option'
-    #     required: true
-    #     type: choice
-    #     options:
-    #       - 'Run Full Test'
-    #       - 'Run Selected Test'
-    #       - 'No Test Run'
+    inputs:
+      environment:
+        required: true
+        description: 'Environment to run the script'
+        type: environment
+      sobjects:
+        required: true
+        description: 'Comma-separated list of SObject names (e.g. abc__c,def__c)'
+        type: string
   
 # Environment variables
 # env:
