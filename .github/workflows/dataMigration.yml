@@ -29,21 +29,50 @@ jobs:
     - name: Fail if another run is already in progress
       env:
         GH_TOKEN: ${{ github.token }}
+      # run: |
+      #   echo "Checking for running workflows..."
+    
+      #   RUNNING=$(gh api \
+      #     "/repos/${{ github.repository }}/actions/workflows/dataMigration.yml/runs?branch=main" \
+      #     --jq ".workflow_runs[]
+      #       | select(.status == \"in_progress\" or .status == \"queued\")
+      #       | select(.id != ${{ github.run_id }})
+      #       | .id" \
+      #     | wc -l)
+    
+      #   if [ "$RUNNING" -gt 0 ]; then
+      #     echo "❌ Another run is already in progress. Failing."
+      #     exit 1
+      #   fi
+      env:
+        GH_TOKEN: ${{ github.token }}
+        CURRENT_ENV: ${{ inputs.environment }}
+        CURRENT_SOBJECTS: ${{ inputs.sobjects }}
       run: |
-        echo "Checking for running workflows..."
+        echo "Checking for concurrent workflow runs..."
+        echo "Branch      : main"
+        echo "Environment : $CURRENT_ENV"
+        echo "SObjects    : $CURRENT_SOBJECTS"
     
         RUNNING=$(gh api \
-          /repos/${{ github.repository }}/actions/workflows/dataMigration.yml/runs \
+          "/repos/${{ github.repository }}/actions/workflows/dataMigration.yml/runs?branch=main" \
           --jq ".workflow_runs[]
             | select(.status == \"in_progress\")
             | select(.id != ${{ github.run_id }})
+            | select(.event == \"workflow_dispatch\")
+            | select(
+                .inputs.environment == \"$CURRENT_ENV\" and
+                .inputs.sobjects == \"$CURRENT_SOBJECTS\"
+              )
             | .id" \
           | wc -l)
     
-        if [ "$RUNNING" -gt 0 ]; then
-          echo "❌ Another run is already in progress. Failing."
+        if [ \"$RUNNING\" -gt 0 ]; then
+          echo \"❌ A workflow is already running with the same branch, environment, and sobjects.\"
           exit 1
         fi
+
+        echo \"✅ No conflicting run found. Proceeding.\"
 
     # Checkout the repository
     - name: Checkout source code
@@ -115,7 +144,7 @@ jobs:
 
     - name: Commit Results To Result Branch
       # if: steps.Folder_check.outputs.Folder_found == 'true'
-      if: always()
+      if: ${{ !cancelled() }}
       run: |
         releaseName="OrgA/"
         branchName="logsBranch"
