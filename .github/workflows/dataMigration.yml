@@ -33,7 +33,7 @@ jobs:
         echo "Checking for running workflows..."
     
         RUNNING=$(gh api \
-          /repos/${{ github.repository }}/actions/workflows/SqlToSFDCSync.yml/runs \
+          /repos/${{ github.repository }}/actions/workflows/dataMigration.yml/runs \
           --jq ".workflow_runs[]
             | select(.status == \"in_progress\")
             | select(.id != ${{ github.run_id }})
