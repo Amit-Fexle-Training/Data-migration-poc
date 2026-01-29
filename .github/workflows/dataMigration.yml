@@ -22,13 +22,16 @@ on:
 jobs:
   data-migration:
     runs-on: ubuntu-latest
+    environment : ${{github.event.inputs.environment}}
+    env:
+      GH_TOKEN: ${{ github.token }}
     permissions:
       contents: write
 
     steps:
     - name: Fail if another run is already in progress
-      env:
-        GH_TOKEN: ${{ github.token }}
+      # env:
+      #   GH_TOKEN: ${{ github.token }}
       # run: |
       #   echo "Checking for running workflows..."
     
