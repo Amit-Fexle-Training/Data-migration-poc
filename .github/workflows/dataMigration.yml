@@ -26,24 +26,25 @@ jobs:
       contents: write
 
     steps:
-    - name: Fail if another run is in progress for same sobjects
+    - name: Fail if another run is already in progress
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
         echo "Checking for running workflows..."
     
         RUNNING=$(gh api \
-          /repos/${{ github.repository }}/actions/workflows/${{ github.workflow }}/runs \
-          --jq '.workflow_runs[]
-            | select(.status=="in_progress")
-            | select(.id != '${{ github.run_id }}')
-            | .id' \
+          /repos/${{ github.repository }}/actions/workflows/SqlToSFDCSync.yml/runs \
+          --jq ".workflow_runs[]
+            | select(.status == \"in_progress\")
+            | select(.id != ${{ github.run_id }})
+            | .id" \
           | wc -l)
     
         if [ "$RUNNING" -gt 0 ]; then
           echo "❌ Another run is already in progress. Failing."
           exit 1
         fi
+
     # Checkout the repository
     - name: Checkout source code
       uses: actions/checkout@v4
