@@ -12,154 +12,188 @@ on:
         description: 'Comma-separated list of SObject names (e.g. abc__c,def__c)'
         type: string
 
-concurrency:
-  group: ${{ github.workflow }}-${{ inputs.environment }}-${{ inputs.sobjects }}
-  cancel-in-progress: false
+# concurrency:
+#   group: ${{ github.workflow }}-${{ inputs.environment }}-${{ inputs.sobjects }}
+#   cancel-in-progress: false
   
 # Environment variables
-# env:
+env:
   # SF_USE_GENERIC_UNIX_KEYCHAIN: true
   # SF_DOMAIN_RETRY: 300
   # SF_DISABLE_APP_HUB: true
   # SF_LOG_LEVEL: DEBUG
+  GH_TOKEN: ${{ github.token }}
+  CURRENT_ENV: ${{ inputs.environment }}
+  CURRENT_SOBJECTS: ${{ inputs.sobjects }}
   
 jobs:
-  data-migration:
+  data-migration1:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ inputs.environment }}-${{ inputs.sobjects }}
+      cancel-in-progress: false
     environment : ${{github.event.inputs.environment}}
-    env:
-      GH_TOKEN: ${{ github.token }}
-      CURRENT_ENV: ${{ inputs.environment }}
-      CURRENT_SOBJECTS: ${{ inputs.sobjects }}
     permissions:
       contents: write
 
     steps:
-    # - name: Fail if another run is already in progress
-      # env:
-      #   GH_TOKEN: ${{ github.token }}
-      # run: |
-      #   echo "Checking for running workflows..."
-    
-      #   RUNNING=$(gh api \
-      #     "/repos/${{ github.repository }}/actions/workflows/dataMigration.yml/runs?branch=main" \
-      #     --jq ".workflow_runs[]
-      #       | select(.status == \"in_progress\" or .status == \"queued\")
-      #       | select(.id != ${{ github.run_id }})
-      #       | .id" \
-      #     | wc -l)
-    
-      #   if [ "$RUNNING" -gt 0 ]; then
-      #     echo "❌ Another run is already in progress. Failing."
-      #     exit 1
-      #   fi
-      # run: |
-      #   echo "Checking for concurrent workflow runs..."
-      #   echo "Branch      : main"
-      #   echo "Environment : $CURRENT_ENV"
-      #   echo "SObjects    : $CURRENT_SOBJECTS"
-    
-      #   RUNNING=$(gh api \
-      #     "/repos/${{ github.repository }}/actions/workflows/dataMigration.yml/runs?branch=main" \
-      #     --jq ".workflow_runs[]
-      #       | select(.status == \"in_progress\")
-      #       | select(.id != ${{ github.run_id }})
-      #       | select(.event == \"workflow_dispatch\")
-      #       | select(
-      #           .inputs.environment == \"$CURRENT_ENV\" and
-      #           .inputs.sobjects == \"$CURRENT_SOBJECTS\"
-      #         )
-      #       | .id" | wc -l | tr -d '[:space:]')
-    
-      #   echo "Matching running workflows count: $RUNNING"
-    
-      #   if (( RUNNING > 0 )); then
-      #     echo "❌ A workflow is already running with the same branch, environment, and sobjects."
-      #     exit 1
-      #   fi
-    
-      #   echo "✅ No conflicting run found. Proceeding."
-
-    # Checkout the repository
-    - name: Checkout source code
-      uses: actions/checkout@v4
-      with:
-        # fetch-depth: 0  # Fetch full history for git diff
-        persist-credentials: true  # Persist credentials for git push operations
-      
-    # Setup Node.js
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-
-    # Install Salesforce CLI via NPM
-    - name: Install Salesforce CLI
+    - name: Fail if another run is already in progress
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
-        npm install -g @salesforce/cli
-        sf --version
-
-    # Install SFDMU
-    - name: Install SFDMU
-      run: |
-        echo y | sf plugins install sfdmu
-
-    # Create JWT key file from secret
-    - name: Create JWT Key File
-      run: |
-        echo "${{ secrets.SF_JWT_KEY }}" > jwt-key.txt
-        chmod 600 jwt-key.txt
-
-    # Authenticate to Salesforce using JWT
-    - name: Authenticate to Source Org
-      run: |
-        sf org login jwt \
-          --client-id ${{ secrets.SF_CLIENT_ID }} \
-          --jwt-key-file jwt-key.txt \
-          --username ${{ secrets.SF_USERNAME }} \
-          --instance-url ${{ secrets.SF_INSTANCE_URL }} \
-          --alias sourceOrg \
-          # --set-default
-
-    # - name: Authenticate to Target Org
-    #   run: |
-    #     sf org login jwt \
-    #       --client-id ${{ secrets.SF_CLIENT_ID }} \
-    #       --jwt-key-file jwt-key.txt \
-    #       --username ${{ secrets.SF_USERNAME }} \
-    #       --instance-url ${{ secrets.SF_INSTANCE_URL }} \
-    #       --alias targetOrg \
-    #       # --set-default
-
-    - name: Verify Org Auth (Critical)
-      run: |
-        echo "==== ORG LIST ===="
-        sf org list --all
-    
-        # echo "==== ORG DISPLAY ===="
-        # sf org display --target-org sourceOrg --verbose
-
-
-    # Run SFDMU
-    - name: Run SFDMU Migration
-      run: |
-        sf sfdmu:run \
-          --sourceusername sourceOrg \
-          --targetusername sourceOrg \
-          --path "./OrgA/sfdmu"
-
-    - name: Commit Results To Result Branch
-      # if: steps.Folder_check.outputs.Folder_found == 'true'
-      if: ${{ cancelled() }}
-      run: |
-        releaseName="OrgA/"
-        branchName="logsBranch"
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        echo "Checking for running workflows..."
         
-        git fetch origin "$branchName":refs/remotes/origin/"$branchName" # Fetch the latest state of the branch
-        git checkout -b "$branchName" origin/"$branchName" # Create and switch to a local branch based on the remote one
-        git add "$releaseName" # Stage the Results folder for commit
-        git commit -m "Upload log to $branchName branch" || echo "No changes to commit" # Commit the changes
-        git push origin "$branchName" # Push the changes to the remote branch
+  data-migration2:
+    runs-on: ubuntu-latest
+    needs: data-migration1
+    if: failure()
+    environment : ${{github.event.inputs.environment}}
+    permissions:
+      contents: write
+
+    steps:
+    - name: Fail if another run is already in progress
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        echo "Checking for running workflows 2..."
+        
+  # data-migration3:
+  #   runs-on: ubuntu-latest
+  #   environment : ${{github.event.inputs.environment}}
+  #   # env:
+  #   #   GH_TOKEN: ${{ github.token }}
+  #   #   CURRENT_ENV: ${{ inputs.environment }}
+  #   #   CURRENT_SOBJECTS: ${{ inputs.sobjects }}
+  #   permissions:
+  #     contents: write
+
+  #   steps:
+  #   # - name: Fail if another run is already in progress
+  #     # env:
+  #     #   GH_TOKEN: ${{ github.token }}
+  #     # run: |
+  #     #   echo "Checking for running workflows..."
+    
+  #     #   RUNNING=$(gh api \
+  #     #     "/repos/${{ github.repository }}/actions/workflows/dataMigration.yml/runs?branch=main" \
+  #     #     --jq ".workflow_runs[]
+  #     #       | select(.status == \"in_progress\" or .status == \"queued\")
+  #     #       | select(.id != ${{ github.run_id }})
+  #     #       | .id" \
+  #     #     | wc -l)
+    
+  #     #   if [ "$RUNNING" -gt 0 ]; then
+  #     #     echo "❌ Another run is already in progress. Failing."
+  #     #     exit 1
+  #     #   fi
+  #     # run: |
+  #     #   echo "Checking for concurrent workflow runs..."
+  #     #   echo "Branch      : main"
+  #     #   echo "Environment : $CURRENT_ENV"
+  #     #   echo "SObjects    : $CURRENT_SOBJECTS"
+    
+  #     #   RUNNING=$(gh api \
+  #     #     "/repos/${{ github.repository }}/actions/workflows/dataMigration.yml/runs?branch=main" \
+  #     #     --jq ".workflow_runs[]
+  #     #       | select(.status == \"in_progress\")
+  #     #       | select(.id != ${{ github.run_id }})
+  #     #       | select(.event == \"workflow_dispatch\")
+  #     #       | select(
+  #     #           .inputs.environment == \"$CURRENT_ENV\" and
+  #     #           .inputs.sobjects == \"$CURRENT_SOBJECTS\"
+  #     #         )
+  #     #       | .id" | wc -l | tr -d '[:space:]')
+    
+  #     #   echo "Matching running workflows count: $RUNNING"
+    
+  #     #   if (( RUNNING > 0 )); then
+  #     #     echo "❌ A workflow is already running with the same branch, environment, and sobjects."
+  #     #     exit 1
+  #     #   fi
+    
+  #     #   echo "✅ No conflicting run found. Proceeding."
+
+  #   # Checkout the repository
+  #   - name: Checkout source code
+  #     uses: actions/checkout@v4
+  #     with:
+  #       # fetch-depth: 0  # Fetch full history for git diff
+  #       persist-credentials: true  # Persist credentials for git push operations
+      
+  #   # Setup Node.js
+  #   - name: Setup Node.js
+  #     uses: actions/setup-node@v4
+  #     with:
+  #       node-version: '18'
+
+  #   # Install Salesforce CLI via NPM
+  #   - name: Install Salesforce CLI
+  #     run: |
+  #       npm install -g @salesforce/cli
+  #       sf --version
+
+  #   # Install SFDMU
+  #   - name: Install SFDMU
+  #     run: |
+  #       echo y | sf plugins install sfdmu
+
+  #   # Create JWT key file from secret
+  #   - name: Create JWT Key File
+  #     run: |
+  #       echo "${{ secrets.SF_JWT_KEY }}" > jwt-key.txt
+  #       chmod 600 jwt-key.txt
+
+  #   # Authenticate to Salesforce using JWT
+  #   - name: Authenticate to Source Org
+  #     run: |
+  #       sf org login jwt \
+  #         --client-id ${{ secrets.SF_CLIENT_ID }} \
+  #         --jwt-key-file jwt-key.txt \
+  #         --username ${{ secrets.SF_USERNAME }} \
+  #         --instance-url ${{ secrets.SF_INSTANCE_URL }} \
+  #         --alias sourceOrg \
+  #         # --set-default
+
+  #   # - name: Authenticate to Target Org
+  #   #   run: |
+  #   #     sf org login jwt \
+  #   #       --client-id ${{ secrets.SF_CLIENT_ID }} \
+  #   #       --jwt-key-file jwt-key.txt \
+  #   #       --username ${{ secrets.SF_USERNAME }} \
+  #   #       --instance-url ${{ secrets.SF_INSTANCE_URL }} \
+  #   #       --alias targetOrg \
+  #   #       # --set-default
+
+  #   - name: Verify Org Auth (Critical)
+  #     run: |
+  #       echo "==== ORG LIST ===="
+  #       sf org list --all
+    
+  #       # echo "==== ORG DISPLAY ===="
+  #       # sf org display --target-org sourceOrg --verbose
+
+
+  #   # Run SFDMU
+  #   - name: Run SFDMU Migration
+  #     run: |
+  #       sf sfdmu:run \
+  #         --sourceusername sourceOrg \
+  #         --targetusername sourceOrg \
+  #         --path "./OrgA/sfdmu"
+
+  #   - name: Commit Results To Result Branch
+  #     # if: steps.Folder_check.outputs.Folder_found == 'true'
+  #     if: ${{ cancelled() }}
+  #     run: |
+  #       releaseName="OrgA/"
+  #       branchName="logsBranch"
+  #       git config user.name "github-actions[bot]"
+  #       git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        
+  #       git fetch origin "$branchName":refs/remotes/origin/"$branchName" # Fetch the latest state of the branch
+  #       git checkout -b "$branchName" origin/"$branchName" # Create and switch to a local branch based on the remote one
+  #       git add "$releaseName" # Stage the Results folder for commit
+  #       git commit -m "Upload log to $branchName branch" || echo "No changes to commit" # Commit the changes
+  #       git push origin "$branchName" # Push the changes to the remote branch
       
