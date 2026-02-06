@@ -75,6 +75,7 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
         echo "Checking for running workflows 2..."
+        echo "Job1 result: ${{ needs.data-migration1.result }}"
         
   # data-migration3:
   #   runs-on: ubuntu-latest
